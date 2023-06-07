@@ -1,0 +1,62 @@
+SELECT distinct APY_BASIC_Z0.FORMID,
+            case when APY_ASSET_EXPAND_Z0.STATUS='1' then '' else
+            ( case when ( APY_BASIC_Z0_1.FORMID is not null and APY_ASSET_EXPAND_Z0.PRE_KEEPER=APY_BASIC_Z0_1.APY_EMP) 
+            then '' else APY_BASIC_Z0.FORMID end ) end , 
+            
+             APY_ASSET_EXPAND_Z0.SEQ_NUMBER,APY_BUYITEM_Z0.ORD, APY_BUYITEM_Z0.ITEM_NAME, 
+            case when  TRIM(APY_BUYITEM_Z0.ITEM_NAME)='顯示器' then trim(SUB_CLASS) || '吋' else 
+            ( case when ( APY_ASSET_EXPAND_Z0.MAIN_ITEM like '大量授權軟體%' and BUY_ITEM_Z0.LICENCE_QUTY is not null ) then N'大量授權軟體(單一授權)' else APY_ASSET_SPEC_Z0.MAIN_ITEM end ) end,
+            trim( apy_buyitem_z0.MAIN_FACT) ,substr( apy_buyitem_z0.SPEC,1,50) ,
+
+            APY_ASSET_SPEC_Z0.MAIN_ITEM_NO, APY_ASSET_SPEC_Z0.MAIN_ITEM_YEAR,
+            case when  BUY_ITEM_Z0.BUY_MONEY_TW>0  then round( ( to_number(BUY_ITEM_Z0.BUY_MONEY_TW)/to_number(BUY_ITEM_Z0.QUTY))/(nvl(APY_ASSET_EXPAND_Z0.licence,1)) ,0) else 0 end ,
+
+            APY_BUYCONT_Z0.BELONGS , APY_BASIC_Z0.APY_DEPT, APY_BASIC_Z0.APY_DEPT_NAME, APY_ASSET_EXPAND_Z0.AREA, APY_ASSET_EXPAND_Z0.LOCATION,
+            
+            case when APY_ASSET_EXPAND_Z0.STATUS='1' then APY_ASSET_EXPAND_Z0.PRE_KEEPER else
+            ( case when APY_BASIC_Z0_1.FORMID is not null then APY_BASIC_Z0_1.APY_EMP else APY_BUYCONT_Z0.CHK_EMP end ) end , 
+            
+            case when APY_ASSET_EXPAND_Z0.STATUS='1' then APY_ASSET_EXPAND_Z0.PRE_KEEPER_NAME else
+            ( case when APY_BASIC_Z0_1.FORMID is not null then to_char(substr(APY_BASIC_Z0_1.APY_NAME,8,10)) else APY_BUYCONT_Z0.CHK_EMP end ) end , 
+            
+             APY_ASSET_EXPAND_Z0.PRE_USER, APY_ASSET_EXPAND_Z0.PRE_USER_NAME,  
+
+            '購置',
+            case when TRIM(APY_BUYCONT_Z0.BELONGS)>='Q' then '#不代管' else 
+             (case when TRIM(APY_BUYCONT_Z0.IS_MANG)='0' then '#代管' else '#不代管' end )  end   
+
+            ,APY_ASSET_EXPAND_Z0.USE_ATTR
+            , (case when BUY_ITEM_Z0.UPDATE_IS_PAY is null THEN  TRIM(BUY_ITEM_Z0.IS_PAY) else  to_char(BUY_ITEM_Z0.UPDATE_IS_PAY) end ) 
+            
+            , APY_ASSET_EXPAND_Z0.SEQ_NO, APY_ASSET_EXPAND_Z0.ORD, APY_ASSET_EXPAND_Z0.ITEM_ORD, APY_ASSET_EXPAND_Z0.ORD1 ,sysdate 
+             
+            ,APY_ASSET_EXPAND_Z0.property_no
+            , (case when BUY_ITEM_Z0.UPDATE_PROPERTY_CLASS is null THEN TRIM(BUY_ITEM_Z0.property_class) else to_char(BUY_ITEM_Z0.UPDATE_PROPERTY_CLASS)   end )
+
+            , case when trim(APY_BUYITEM_Z0.ASSET_MTN)='驗收合格後保固' then trim(APY_BUYITEM_Z0.MTN_YEAR) else '' end 
+
+            , nvl(APY_ASSET_SPEC_Z0.LICENCE,1) 
+
+            ,APY_ASSET_EXPAND_Z0.TOT_PRICE,APY_ASSET_EXPAND_Z0.PUR_DATE,APY_ASSET_EXPAND_Z0.CHECK_NO,
+            APY_ASSET_EXPAND_Z0.ORG_NO,APY_ASSET_EXPAND_Z0.PROPERTY_OUTDATE,APY_ASSET_EXPAND_Z0.PM_SER,APY_ASSET_EXPAND_Z0.CHECK_TYPE,
+            APY_ASSET_EXPAND_Z0.SER_NO  , APY_BUYITEM_Z0.BUY_WAY2 
+            
+            FROM ((((APY_BASIC_Z0 INNER JOIN APY_BUYCONT_Z0 ON APY_BASIC_Z0.FORMID = APY_BUYCONT_Z0.FORMID) INNER JOIN 
+            (APY_BUYITEM_Z0 INNER JOIN APY_ASSET_SPEC_Z0 ON (APY_BUYITEM_Z0.ORD = APY_ASSET_SPEC_Z0.ITEM_ORD) AND
+            (APY_BUYITEM_Z0.FORMID = APY_ASSET_SPEC_Z0.FORMID)) ON APY_BUYCONT_Z0.FORMID = APY_BUYITEM_Z0.FORMID)
+            INNER JOIN APY_ASSET_EXPAND_Z0 ON (APY_ASSET_SPEC_Z0.ITEM_ORD = APY_ASSET_EXPAND_Z0.ORD) AND
+            (APY_ASSET_SPEC_Z0.FORMID = APY_ASSET_EXPAND_Z0.FORMID)) INNER JOIN BUY_ITEM_Z0 ON
+            (APY_ASSET_EXPAND_Z0.FORMID = BUY_ITEM_Z0.FORMID) AND (APY_ASSET_EXPAND_Z0.ORD = BUY_ITEM_Z0.ORD) AND
+            (APY_ASSET_EXPAND_Z0.ITEM_ORD = BUY_ITEM_Z0.ORD1)) LEFT JOIN APY_BASIC_Z0  APY_BASIC_Z0_1 ON BUY_ITEM_Z0.CHK_FORMID
+            = APY_BASIC_Z0_1.FORMID                   
+
+            WHERE BUY_ITEM_Z0.TRANS_TO_ASSET is null and APY_ASSET_EXPAND_Z0.seq_number is not null and
+            APY_BASIC_Z0.VALID_FLAG='1' AND BUY_ITEM_Z0.VALID_FLAG='1' 
+            
+            and substr(APY_BUYITEM_Z0.formid,7,1)<>'Y' and substr(APY_BUYITEM_Z0.formid,7,1)<>'X' 
+            and substr(APY_BUYCONT_Z0.formid,7,1)<>'Y' and substr(APY_BUYCONT_Z0.formid,7,1)<>'X' 
+            and substr(APY_ASSET_SPEC_Z0.formid,7,1)<>'Y' and substr(APY_ASSET_SPEC_Z0.formid,7,1)<>'X' 
+
+            AND  ( BUY_ITEM_Z0.EMP_CHKD='Y' or ( BUY_ITEM_Z0.EMP_CHKD='N' and  BUY_ITEM_Z0.UPDATE_PRICE is not null) )
+            
+            AND  BUY_ITEM_Z0.BOSS_CHKD='Y' and BUY_ITEM_Z0.formid like 'BA%' 
